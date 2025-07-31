@@ -69,7 +69,7 @@ const evaluateInput = () => {
         ? Math.round((correctWords / totalWords) * 100)
         : 0;
 
-    // ✅ Calculate Typing Speed (WPM)
+    //Calculate Typing Speed (WPM)
     const minutesTaken = (timeLimit - timeLeft) / 60;
     const wpm = minutesTaken > 0 ? Math.round(correctWords / minutesTaken) : 0;
 
