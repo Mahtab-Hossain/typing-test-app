@@ -1,94 +1,89 @@
-// Get DOM elements by their IDs
-const sampleText = document.getElementById("sample-text").innerText; // The reference text to type
-const inputText = document.getElementById("input-text"); // The textarea where the user types
-const startButton = document.getElementById("start-button"); // The button to start the test
-const time = document.getElementById("timer"); // Element to show remaining time
-const totalWordsTyped = document.getElementById("total-words-types"); // Display for total words typed
-const correctWordsTyped = document.getElementById("correct-words-types"); // Display for correct words typed
-const accuracy = document.getElementById("acc"); // Display for typing accuracy
-const accuracyPercentage = document.getElementById("acc"); // Redundant, same as above (can be removed)
+// Get DOM elements
+const sampleText = document.getElementById("sample-text").innerText;
+const inputText = document.getElementById("input-text");
+const startButton = document.getElementById("start-button");
+const time = document.getElementById("timer");
+const totalWordsTyped = document.getElementById("total-words-types");
+const correctWordsTyped = document.getElementById("correct-words-types");
+const accuracy = document.getElementById("acc");
+const typingSpeed = document.getElementById("wpm");
 
-// Initialize test state variables
-let timeLimit = 60; // Total time allowed for the test (in seconds)
-let timeLeft = timeLimit; // Current time remaining
-let timer = null; // Holds reference to the interval timer
-let isTyping = false; // Flag to check whether the test is running
+// State variables
+let timeLimit = 60; // in seconds
+let timeLeft = timeLimit;
+let timer = null;
+let isTyping = false;
 
-// Starts the typing test
+// Resets all display values
+const resetResults = () => {
+    totalWordsTyped.innerText = "0";
+    correctWordsTyped.innerText = " 0";
+    accuracy.innerText = " 0%";
+    typingSpeed.innerText = " 0";
+};
+
+// Called to start the typing test
 const startTypingTest = () => {
-    if (isTyping) return; // Prevent multiple clicks on Start
+    if (isTyping) return;
 
-    isTyping = true; // Set test as running
-    inputText.disabled = false; // Enable the input field
-    inputText.value = ""; // Clear previous text
-    inputText.focus(); // Focus the textarea
-    timeLeft = timeLimit; // Reset timer
-    time.innerText = `Time: ${timeLeft} Seconds`; // Display initial time
+    isTyping = true;
+    inputText.disabled = false;      // Enable textarea
+    inputText.value = "";            // Clear previous text
+    inputText.focus();               // Put cursor in textarea
+    timeLeft = timeLimit;
+    time.innerText = `Time: ${timeLeft} Seconds`;
+    resetResults();
 
-    // Start countdown timer
+    // Start the countdown
     timer = setInterval(() => {
         timeLeft--;
         time.innerText = `Time: ${timeLeft} Seconds`;
 
-        // When time runs out
+        //Stop test when time runs out
         if (timeLeft <= 0) {
-            clearInterval(timer); // Stop timer
-            isTyping = false; // Mark test as finished
-            inputText.disabled = true; // Disable input
-            calculateResults(); // Show final results (not defined in your code, but assumed)
+            clearInterval(timer);
+            isTyping = false;
+            inputText.disabled = true;     // Disable textarea
+            evaluateInput();               // Show final result
         }
-    }, 1000); // Runs every 1 second
+    }, 1000);
 };
 
-// Optional helper function (currently unused)
-const updateTimer = () => {
-    timerDisplay.innerText = `Time: ${timeLeft}s`; // Updates timer display
-};
-
-// Resets all results before starting a new test
-const resetResults = () => {
-    totalWordsTyped.innerText = "Total Words Typed: 0";
-    correctWordsTyped.innerText = "Correct Words Typed: 0";
-    accuracy.innerText = "Accuracy: 0%";
-};
-
-// Manually ends the test (currently not used directly)
-const finishTypingTest = () => {
-    clearInterval(timer); // Stop the timer
-    isTyping = false; // Update typing status
-    inputText.disabled = true; // Prevent further input
-    calculateResults(); // Final evaluation (again, not defined here)
-};
-
-// Real-time input evaluation: runs every time the user types something
+//Evaluates typed text and updates display
 const evaluateInput = () => {
-    const inputValue = inputText.value.trim(); // Get current input
-    const wordsTyped = inputValue
-        .split(/\s+/) // Split by any whitespace
-        .filter(word => word.length > 0) // Filter out empty strings
-        .length;
+    const inputValue = inputText.value.trim();
 
-    const correctWords = inputValue
-        .split(/\s+/) // Split typed text
-        .filter((word, index) => word === sampleText.split(/\s+/)[index]) // Match each word with reference
-        .length;
+    const typedWords = inputValue
+        .split(/\s+/)
+        .filter(word => word.length > 0);
 
-    // Update results in the UI
-    totalWordsTyped.innerText = `Total Words Typed: ${wordsTyped}`;
-    correctWordsTyped.innerText = `Correct Words Typed: ${correctWords}`;
+    const sampleWords = sampleText
+        .split(/\s+/);
 
-    const accuracyValue = wordsTyped > 0 
-        ? Math.round((correctWords / wordsTyped) * 100) 
+    const totalWords = typedWords.length;
+
+    // Count correct words at correct positions
+    const correctWords = typedWords.filter((word, index) => word === sampleWords[index]).length;
+
+    const accuracyPercent = totalWords > 0
+        ? Math.round((correctWords / totalWords) * 100)
         : 0;
 
-    accuracy.innerText = `Accuracy: ${accuracyValue}%`;
+    // ✅ Calculate Typing Speed (WPM)
+    const minutesTaken = (timeLimit - timeLeft) / 60;
+    const wpm = minutesTaken > 0 ? Math.round(correctWords / minutesTaken) : 0;
+
+    // Update UI
+    totalWordsTyped.innerText = `${totalWords}`;
+    correctWordsTyped.innerText = `${correctWords}`;
+    accuracy.innerText = `${accuracyPercent}%`;
+    typingSpeed.innerText = `${wpm} WPM`;
 };
 
-// Event listener: triggers when user clicks the Start button
+//Event: Start button
 startButton.addEventListener("click", () => {
-    resetResults(); // Clear old results
-    startTypingTest(); // Start a new test
+    startTypingTest(); // Begin test
 });
 
-// Event listener: triggers whenever user types inside the input field
+//Event: On every input update
 inputText.addEventListener("input", evaluateInput);
